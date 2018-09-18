@@ -21,11 +21,9 @@ begin
   refl
 end
 
-protected def matrix.le_trans [partial_order α] (a b c: matrix n m α) :
-a ≤ b → b ≤ c → a ≤ c :=
+protected def matrix.le_trans [partial_order α] (a b c: matrix n m α)
+  (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c :=
 begin
-  assume h1: a ≤ b,
-  assume h2: b ≤ c,
   assume i: n,
   assume j: m,
   have h1l: a i j ≤ b i j, from h1 i j,
