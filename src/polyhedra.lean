@@ -35,18 +35,11 @@ begin
   apply h2l,
 end
 
-protected def matrix.le_antisymm [partial_order α] (a b: matrix n m α) :
-a ≤ b → b ≤ a → a = b :=
+protected lemma matrix.le_antisymm [partial_order α] (a b: matrix n m α)
+(h1 : a ≤ b) (h2 : b ≤ a) : a = b :=
 begin
-  assume h1: a ≤ b,
-  assume h2: b ≤ a,
-  rw <-matrix.ext_iff,
-  assume i: n,
-  assume j: m,
-  have h1l: a i j ≤ b i j, from h1 i j,
-  have h2l: b i j ≤ a i j, from h2 i j,
-  simp [le_antisymm_iff],
-  exact and.intro h1l h2l
+  ext i j,
+  exact le_antisymm (h1 i j) (h2 i j)
 end
 
 instance [partial_order α] : partial_order (matrix n m α) :=
