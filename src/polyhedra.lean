@@ -52,7 +52,6 @@ variables [ordered_ring α] (A B : matrix m n α) (b : matrix m unit α)
 
 protected def matrix.row (A : matrix m n α) (row : m) : matrix unit n α :=
 λ x: unit, λ y: n, (A row) y
-local attribute classical.prop_decidable
 
 lemma polyhedron_rowinE [ordered_ring α]
         (x: matrix n unit α) (A: matrix m n α) (b: matrix m unit α):
