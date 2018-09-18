@@ -38,7 +38,6 @@ def polyhedron [ordered_ring α] (A : matrix m n α) (b : matrix m unit α) :
   set (matrix n unit α) :=
 { x : matrix n unit α | A *ₘ x ≥ b }
 
-
 def vec (n: Type) (α : Type) [fintype n] :=
 n → α
 
