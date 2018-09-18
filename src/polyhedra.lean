@@ -13,7 +13,7 @@ instance [partial_order α] : has_le (matrix n m α) :=
   le := le
 }
 
-protected def matrix.le_refl [partial_order α] (A: matrix n m α) :
+protected lemma matrix.le_refl [partial_order α] (A: matrix n m α) :
 A ≤ A :=
 begin
   assume i: n,
@@ -21,7 +21,7 @@ begin
   refl
 end
 
-protected def matrix.le_trans [partial_order α] (a b c: matrix n m α)
+protected lemma matrix.le_trans [partial_order α] (a b c: matrix n m α)
   (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c :=
 begin
   assume i: n,
