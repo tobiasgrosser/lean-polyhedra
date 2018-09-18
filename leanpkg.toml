@@ -1,0 +1,8 @@
+[package]
+name = "discrete-mathematics-exercises"
+version = "0.1"
+lean_version = "3.4.1"
+path = "src"
+
+[dependencies]
+mathlib = {git = "https://github.com/leanprover/mathlib", rev = "a72807fa9f61b8ce48039ad870f7a53857e57f81"}
