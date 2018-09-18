@@ -36,11 +36,9 @@ begin
 end
 
 protected lemma matrix.le_antisymm [partial_order α] (a b: matrix n m α)
-(h1 : a ≤ b) (h2 : b ≤ a) : a = b :=
-begin
-  ext i j,
-  exact le_antisymm (h1 i j) (h2 i j)
-end
+  (h1 : a ≤ b) (h2 : b ≤ a) : a = b :=
+by ext i j; exact le_antisymm (h1 i j) (h2 i j)
+
 
 instance [partial_order α] : partial_order (matrix n m α) :=
 {
