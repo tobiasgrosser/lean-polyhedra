@@ -1,17 +1,13 @@
 import ring_theory.matrix
 
-local infixl ` *ₘ ` : 70 := matrix.mul
-
-variables {α : Type} {n m l : Type} [fintype n] [fintype m] [fintype l]
+variables {α : Type} {n m l : Type} [fintype n] [fintype m]
 
 section matrix
 def le [partial_order α] (M N : matrix n m α)  :=
 ∀i:n, ∀j:m, M i j ≤ N i j
 
 instance [partial_order α] : has_le (matrix n m α) :=
-{
-  le := le
-}
+{ le := le }
 
 protected lemma matrix.le_refl [partial_order α] (A: matrix n m α) :
 A ≤ A :=
@@ -34,6 +30,8 @@ instance [partial_order α] : partial_order (matrix n m α) :=
 }
 
 end matrix
+
+local infixl ` *ₘ ` : 70 := matrix.mul
 
 def polyhedron [ordered_ring α] (A : matrix m n α) (b : matrix m unit α) :
   set (matrix n unit α) :=
