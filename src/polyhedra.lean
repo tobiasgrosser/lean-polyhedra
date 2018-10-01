@@ -4,7 +4,6 @@ import data.set data.set.enumerate data.set.finite
 import set_theory.cardinal
 
 
-
 variables {α : Type} {n m l s t : Type} [fintype n] [fintype m] [fintype s] [fintype t]
 
 variables {n1 n2 : nat}
@@ -94,7 +93,7 @@ def pick_encodable (α : Type) (p : α → Prop) [decidable_pred p]:
     then let idx := encodable.choose h in
       some idx
     else
-      none
+      none 
 
 def xrow [decidable_eq m] (row1: m) (row2: m) (A: matrix m n α) : matrix m n α :=
 λ x y, if x = row1
@@ -102,7 +101,7 @@ def xrow [decidable_eq m] (row1: m) (row2: m) (A: matrix m n α) : matrix m n α
            A row2 y
          else
            if x = row2
-             then
+             then 
                A row1 y
              else
                A x y
@@ -113,8 +112,8 @@ def xcol [decidable_eq n] (col1: n) (col2: n) (A: matrix m n α) : matrix m n α
            A x col2
          else
            if y = col2
-             then
-               A x col1
+             then 
+               A x col1 
              else
                A x y
 
@@ -131,54 +130,60 @@ def nat_add {n} (k) (i : fin n) : fin (k + n) :=
 ⟨k + i.1, nat.add_lt_add_left i.2 _⟩
 
 def rsubmx {m n_left n_right: nat} :
-  matrix (fin m) (fin (n_left + n_right)) α → matrix (fin m) (fin (n_right)) α
+  matrix (fin m) (fin (n_left + n_right)) α → matrix (fin m) (fin (n_right)) α 
 | A := minormx A (λ i, i) (λ j, nat_add _ j)
 
 def lsubmx {m n_left n_right: nat} :
-  matrix (fin m) (fin (n_left + n_right)) α → matrix (fin m) (fin (n_left)) α
+  matrix (fin m) (fin (n_left + n_right)) α → matrix (fin m) (fin (n_left)) α 
 | A := minormx A (λ i, i) (λ j, fin_prefix j _)
 
 def usubmx {m_down m_up n: nat} :
-  matrix (fin (m_up + m_down)) (fin n) α → matrix (fin m_up) (fin n) α
+  matrix (fin (m_up + m_down)) (fin n) α → matrix (fin m_up) (fin n) α 
 | A := minormx A (λ i, fin_prefix i _) (λ j, j)
 
 def dsubmx {m_down m_up n: nat} :
-  matrix (fin (m_up + m_down)) (fin n) α → matrix (fin m_down) (fin n) α
+  matrix (fin (m_up + m_down)) (fin n) α → matrix (fin m_down) (fin n) α 
 | A := minormx A (λ i, nat_add _ i) (λ j, j)
 
 def ursubmx {m_down m_up n_left n_right: nat} :
-  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_up) (fin (n_right)) α
-| A :=
+  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_up) (fin (n_right)) α 
+| A := 
   let (right : matrix (fin (m_up + m_down)) (fin (n_right)) α ) := rsubmx A in
   let (final : matrix (fin (m_up)) (fin (n_right)) α ) := usubmx right in
   final
 
 def drsubmx {m_down m_up n_left n_right: nat} :
-  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_right)) α
-| A :=
+  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_right)) α 
+| A := 
   let (right : matrix (fin (m_up + m_down)) (fin (n_right)) α ) := rsubmx A in
   let (final : matrix (fin (m_down)) (fin (n_right)) α ) := dsubmx right in
   final
 
 def dlsubmx {m_down m_up n_left n_right: nat} :
-  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_left)) α
-| A :=
+  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_left)) α 
+| A := 
   let (left : matrix (fin (m_up + m_down)) (fin (n_left)) α ) := lsubmx A in
   let (final : matrix (fin (m_down)) (fin (n_left)) α ) := dsubmx left in
   final
 
 def swap_fin {x x': nat}  :  fin (x + x') →  fin (x' + x) :=
-λ f,
+λ f, 
 let d := f.1 in
 let e := f.2 in
 ⟨d, begin
     rw nat.add_comm,
-    apply e
-    end⟩
+    apply e    
+    end⟩ 
 
 def fin_swap {m m' n n' : nat} :
   matrix (fin (m + m')) (fin (n + n')) α → matrix (fin (m' + m)) (fin (n' + n)) α :=
     λ A, minormx A swap_fin swap_fin
+
+def fin_first {n m} (i : fin (n + m)) : fin (n) :=
+⟨i.1, sorry⟩ 
+
+def fin_second {n m} (k: nat) (i : fin (n + m)) : fin (m) :=
+⟨i.1 - k , sorry⟩ 
 
 def block_mx {m_down m_up n_left n_right: nat} :
   matrix (fin m_up) (fin n_left) α →
@@ -186,47 +191,44 @@ def block_mx {m_down m_up n_left n_right: nat} :
   matrix (fin m_down) (fin n_left) α →
   matrix (fin m_down) (fin n_right) α →
   matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α
-| up_left up_right down_left down_right :=
+| up_left up_right down_left down_right := 
 λ i j,
- if i.val < m_down
- then
+ if i.val < m_up
+ then 
     if j.val < n_left
     then
-      down_left (fin_prefix i _)  (fin_prefix j _)
+      up_left (fin_first i)  (fin_first j)
     else
-
- else
-
-
-def Gaussian_elimination [ordered_ring α] [decidable_eq α] [has_one α] [has_zero α] [has_inv α] [has_mul α]:
-   Π (m n), matrix (fin m) (fin n) α →
-   (
-    (matrix (fin m) (fin m) α)
-     ×
-    (matrix (fin n) (fin n) α)
-     ×
-     nat
-   )
+      up_right (fin_first i) (fin_second n_left j)
+  else
+   if j.val < n_left
+    then
+      down_left (fin_second m_up i)  (fin_first j)
+    else
+      down_right (fin_second m_up i) (fin_second n_left j)
+ 
+def Gaussian_elimination [decidable_eq α] [has_inv α]:
+   Π (m n), matrix (fin m) (fin n) α → 
+   (matrix (fin m) (fin m) α × matrix (fin n) (fin n) α × nat)
 | (x+1) (y+1) A :=
-  let opt_ij :=
-    pick_encodable (α) (λ x, ¬ (x = 0)) (x+1) (y+1) A in
-  match opt_ij with
+  let optional_ij := pick_encodable (α) (λ x, x ≠ 0) (x+1) (y+1) A in
+  match optional_ij with
   | some ij :=
     let i := ij.1 in
     let j := ij.2 in
     let a := A i j in
-    let (as : matrix (fin y) (fin y) α) := sorry in
     let A1 := xrow i 0 (xcol j 0 A) in
-    let A1' := fin_swap A1 in
-    let B := A1' in
-    let u := ursubmx A1' in
+    let A1' := fin_swap A1 in 
+    let B := A1' in 
+    let u := ursubmx A1' in 
     let v := a⁻¹ • (dlsubmx A1') in
+    let A1sub := drsubmx A1' in
     let u_t_v := (v *ₘ u) in
 
-    let (L, U, r) := Gaussian_elimination (x) (y) ((drsubmx A1') - (v *ₘ u)) in
+    let (L, U, r) := Gaussian_elimination (x) (y) (A1sub - (v *ₘ u)) in 
     (
-      xrow i 0 (block_mx 1 0 v L),
-      xcol j 0 (block_mx as u 0 U),
+      xrow i 0 (fin_swap (block_mx 1 0 v L)),
+      xcol j 0 (fin_swap (block_mx (λ i1 j1, a) u 0 U)),
       r + 1
      )
   | none :=
@@ -242,3 +244,30 @@ def Gaussian_elimination [ordered_ring α] [decidable_eq α] [has_one α] [has_z
       (1 : (matrix (fin (y)) (fin (y)) α)),
       0
      )
+
+def test : matrix (fin 3) (fin 3) rat :=
+λ x y,
+if (x = 0 ∧ y = 0) then 3 else
+if (x = 0 ∧ y = 1) then 3 else
+if (x = 0 ∧ y = 2) then 3 else
+if (x = 1 ∧ y = 0) then 3 else
+if (x = 1 ∧ y = 1) then 2 else
+if (x = 1 ∧ y = 2) then 3 else
+if (x = 2 ∧ y = 0) then 2 else
+if (x = 2 ∧ y = 1) then 1 else
+if (x = 2 ∧ y = 2) then 1 else
+0
+
+def getL : matrix (fin 3) (fin 3) rat :=
+  let res := Gaussian_elimination 3 3 test in
+  res.1
+
+def getU : matrix (fin 3) (fin 3) rat :=
+  let res := Gaussian_elimination 3 3 test in
+  res.2.1
+
+def getRank : nat :=
+let res := Gaussian_elimination 3 3 test in
+res.2.2
+
+#eval (getL *ₘ getU) 2 1
