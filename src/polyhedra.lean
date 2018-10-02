@@ -147,24 +147,19 @@ def dsubmx {m_down m_up n: nat} :
 
 def ursubmx {m_down m_up n_left n_right: nat} :
   matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_up) (fin (n_right)) α 
-| A := 
-  let (right : matrix (fin (m_up + m_down)) (fin (n_right)) α ) := rsubmx A in
-  let (final : matrix (fin (m_up)) (fin (n_right)) α ) := usubmx right in
-  final
+| A := usubmx (rsubmx A)
 
 def drsubmx {m_down m_up n_left n_right: nat} :
   matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_right)) α 
-| A := 
-  let (right : matrix (fin (m_up + m_down)) (fin (n_right)) α ) := rsubmx A in
-  let (final : matrix (fin (m_down)) (fin (n_right)) α ) := dsubmx right in
-  final
+| A := dsubmx (rsubmx A)
+
+def ulsubmx {m_down m_up n_left n_right: nat} :
+  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_up) (fin (n_left)) α 
+| A := usubmx (lsubmx A)
 
 def dlsubmx {m_down m_up n_left n_right: nat} :
   matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_left)) α 
-| A := 
-  let (left : matrix (fin (m_up + m_down)) (fin (n_left)) α ) := lsubmx A in
-  let (final : matrix (fin (m_down)) (fin (n_left)) α ) := dsubmx left in
-  final
+| A :=  dsubmx (lsubmx A)
 
 def swap_fin {x x': nat}  :  fin (x + x') →  fin (x' + x) :=
 λ f, 
@@ -211,7 +206,7 @@ def Gaussian_elimination [decidable_eq α] [has_inv α]:
    Π (m n), matrix (fin m) (fin n) α → 
    (matrix (fin m) (fin m) α × matrix (fin n) (fin n) α × nat)
 | (x+1) (y+1) A :=
-  let optional_ij := pick_encodable (α) (λ x, x ≠ 0) (x+1) (y+1) A in
+  let optional_ij := pick_encodable (α) (λ el, le ≠ 0) (x+1) (y+1) A in
   match optional_ij with
   | some ij :=
     let i := ij.1 in
@@ -221,11 +216,8 @@ def Gaussian_elimination [decidable_eq α] [has_inv α]:
     let A1' := fin_swap A1 in 
     let B := A1' in 
     let u := ursubmx A1' in 
-    let v := a⁻¹ • (dlsubmx A1') in
-    let A1sub := drsubmx A1' in
-    let u_t_v := (v *ₘ u) in
-
-    let (L, U, r) := Gaussian_elimination (x) (y) (A1sub - (v *ₘ u)) in 
+    let v := a⁻¹ • dlsubmx A1' in
+    let (L, U, r) := Gaussian_elimination (x) (y) (drsubmx A1' - (v *ₘ u)) in 
     (
       xrow i 0 (fin_swap (block_mx 1 0 v L)),
       xcol j 0 (fin_swap (block_mx (λ i1 j1, a) u 0 U)),
