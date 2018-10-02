@@ -123,43 +123,55 @@ def fin_prefix {n} (i : fin n) (k) : fin (n + k) :=
 
 variables {m' n': Type} [fintype m'] [fintype n']
 
-def minormx : matrix m n α → (m' → m) → (n' → n) → matrix m' n' α :=
-λ A trans_col trans_row i j, A (trans_col i) (trans_row j)
-
 def nat_add {n} (k) (i : fin n) : fin (k + n) :=
 ⟨k + i.1, nat.add_lt_add_left i.2 _⟩
 
-def rsubmx {m n_left n_right: nat} :
-  matrix (fin m) (fin (n_left + n_right)) α → matrix (fin m) (fin (n_right)) α 
-| A := minormx A (λ i, i) (λ j, nat_add _ j)
+def minormx
+  (A: matrix m n α)
+  (trans_col: (m' → m))
+  (trans_row: (n' → n)) :
+  matrix m' n' α :=
+λ i j, A (trans_col i) (trans_row j)
 
-def lsubmx {m n_left n_right: nat} :
-  matrix (fin m) (fin (n_left + n_right)) α → matrix (fin m) (fin (n_left)) α 
-| A := minormx A (λ i, i) (λ j, fin_prefix j _)
+def rsubmx {m n_left n_right: nat}
+  (A : matrix (fin m) (fin (n_left + n_right)) α) :
+  matrix (fin m) (fin (n_right)) α :=
+minormx A (λ i, i) (λ j, nat_add n_left j)
 
-def usubmx {m_down m_up n: nat} :
-  matrix (fin (m_up + m_down)) (fin n) α → matrix (fin m_up) (fin n) α 
-| A := minormx A (λ i, fin_prefix i _) (λ j, j)
+def lsubmx {m n_left n_right: nat}
+  (A: matrix (fin m) (fin (n_left + n_right)) α):
+  matrix (fin m) (fin (n_left)) α :=
+minormx A (λ i, i) (λ j, fin_prefix j n_right)
 
-def dsubmx {m_down m_up n: nat} :
-  matrix (fin (m_up + m_down)) (fin n) α → matrix (fin m_down) (fin n) α 
-| A := minormx A (λ i, nat_add _ i) (λ j, j)
+def usubmx {m_down m_up n: nat}
+  (A: matrix (fin (m_up + m_down)) (fin n) α) :
+  matrix (fin m_up) (fin n) α :=
+minormx A (λ i, fin_prefix i m_down) (λ j, j)
 
-def ursubmx {m_down m_up n_left n_right: nat} :
-  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_up) (fin (n_right)) α 
-| A := usubmx (rsubmx A)
+def dsubmx {m_down m_up n: nat}
+  (A: matrix (fin (m_up + m_down)) (fin n) α) :
+  matrix (fin m_down) (fin n) α :=
+minormx A (λ i, nat_add m_up i) (λ j, j)
 
-def drsubmx {m_down m_up n_left n_right: nat} :
-  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_right)) α 
-| A := dsubmx (rsubmx A)
+def ursubmx {m_down m_up n_left n_right: nat}
+  (A: matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α) :
+  matrix (fin m_up) (fin (n_right)) α :=
+usubmx (rsubmx A)
 
-def ulsubmx {m_down m_up n_left n_right: nat} :
-  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_up) (fin (n_left)) α 
-| A := usubmx (lsubmx A)
+def drsubmx {m_down m_up n_left n_right: nat}
+  (A: matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α) :
+  matrix (fin m_down) (fin (n_right)) α :=
+dsubmx (rsubmx A)
 
-def dlsubmx {m_down m_up n_left n_right: nat} :
-  matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α → matrix (fin m_down) (fin (n_left)) α 
-| A :=  dsubmx (lsubmx A)
+def ulsubmx {m_down m_up n_left n_right: nat}
+  (A: matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α) :
+  matrix (fin m_up) (fin (n_left)) α :=
+usubmx (lsubmx A)
+
+def dlsubmx {m_down m_up n_left n_right: nat}
+  (A: matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α) :
+  matrix (fin m_down) (fin (n_left)) α :=
+dsubmx (lsubmx A)
 
 def swap_fin {x x': nat}  :  fin (x + x') →  fin (x' + x) :=
 λ f, 
