@@ -173,24 +173,22 @@ def dlsubmx {m_down m_up n_left n_right: nat}
   matrix (fin m_down) (fin (n_left)) α :=
 dsubmx (lsubmx A)
 
-def swap_fin {x x': nat}  :  fin (x + x') →  fin (x' + x) :=
-λ f, 
-let d := f.1 in
-let e := f.2 in
-⟨d, begin
-    rw nat.add_comm,
-    apply e    
-    end⟩ 
+def fin_swap_add {x x': nat}  (F: fin (x + x')) : fin (x' + x) :=
+let d := F.1 in -- I seem to need this temporary assignment for the types to work out
+⟨d, begin rw nat.add_comm, apply F.2 end⟩ 
 
-def fin_swap {m m' n n' : nat} :
-  matrix (fin (m + m')) (fin (n + n')) α → matrix (fin (m' + m)) (fin (n' + n)) α :=
-    λ A, minormx A swap_fin swap_fin
+def fin_swap {m m' n n' : nat} 
+  (A: matrix (fin (m + m')) (fin (n + n')) α) :
+   matrix (fin (m' + m)) (fin (n' + n)) α :=
+minormx A fin_swap_add fin_swap_add
 
-def fin_first {n m} (i : fin (n + m)) : fin (n) :=
-⟨i.1, sorry⟩ 
+def fin_first {n m} (i : fin (n + m)) {h: i.val < n}: fin (n) :=
+⟨i.1, begin apply h end⟩
 
-def fin_second {n m} (k: nat) (i : fin (n + m)) : fin (m) :=
-⟨i.1 - k , sorry⟩ 
+def fin_second {n m} (i : fin (n + m)) {h: i.val > n}: fin (m) :=
+⟨i.1 - n, begin i  end⟩
+
+#check fin_first 
 
 def block_mx {m_down m_up n_left n_right: nat} :
   matrix (fin m_up) (fin n_left) α →
@@ -202,17 +200,18 @@ def block_mx {m_down m_up n_left n_right: nat} :
 λ i j,
  if i.val < m_up
  then 
-    if j.val < n_left
+   let x := j.val < n_left in
+    if x
     then
-      up_left (fin_first i)  (fin_first j)
+      up_left (fin_first i) (fin_first j)
     else
-      up_right (fin_first i) (fin_second n_left j)
+      up_right (fin_first i) (fin_second j)
   else
    if j.val < n_left
     then
-      down_left (fin_second m_up i)  (fin_first j)
+      down_left (fin_second i)  (fin_first j)
     else
-      down_right (fin_second m_up i) (fin_second n_left j)
+      down_right (fin_second i) (fin_second j)
  
 def Gaussian_elimination [decidable_eq α] [has_inv α]:
    Π (m n), matrix (fin m) (fin n) α → 
