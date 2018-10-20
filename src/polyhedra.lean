@@ -1,8 +1,8 @@
 import ring_theory.matrix
 import data.rat
-import data.set data.set.enumerate data.set.finite
+import data.set data.set.enumerate data.set.finite data.finset
 import set_theory.cardinal
-
+import tactic.linarith
 
 variables {α : Type} {n m l s t : Type} [fintype n] [fintype m] [fintype s] [fintype t]
 
@@ -95,6 +95,35 @@ def pick_encodable (α : Type) (p : α → Prop) [decidable_pred p]:
     else
       none 
 
+
+
+def fin_prefix {n} (i : fin n) (k: nat) : fin (n + k) :=
+⟨i.1,
+begin
+  have h : i.val < n, from by apply i.2,
+  apply lt_add_of_lt_of_nonneg,
+  apply h,
+  have h2 : n = 0 ∨ n > 0, from by apply nat.eq_zero_or_pos,
+  simp
+end
+⟩
+
+def fin_first {n m} (i : fin (n + m)) (h : i.val < n): fin (n) :=
+⟨i.1, begin apply h end⟩
+
+def fin_second {n m} (i : fin (n + m)) (h: i.val >= n ): fin (m) :=
+⟨i.1 - n,
+  begin
+    have h2: i.val < n + m, from i.2,
+    sorry
+  end
+⟩
+
+variables {m' n': Type} [fintype m'] [fintype n']
+
+def nat_add {n} (k) (i : fin n) : fin (k + n) :=
+⟨k + i.1, nat.add_lt_add_left i.2 _⟩
+
 def xrow [decidable_eq m] (row1: m) (row2: m) (A: matrix m n α) : matrix m n α :=
 λ x y, if x = row1
          then
@@ -116,15 +145,6 @@ def xcol [decidable_eq n] (col1: n) (col2: n) (A: matrix m n α) : matrix m n α
                A x col1 
              else
                A x y
-
-
-def fin_prefix {n} (i : fin n) (k) : fin (n + k) :=
-⟨i.1, sorry ⟩
-
-variables {m' n': Type} [fintype m'] [fintype n']
-
-def nat_add {n} (k) (i : fin n) : fin (k + n) :=
-⟨k + i.1, nat.add_lt_add_left i.2 _⟩
 
 def minormx
   (A: matrix m n α)
@@ -173,22 +193,11 @@ def dlsubmx {m_down m_up n_left n_right: nat}
   matrix (fin m_down) (fin (n_left)) α :=
 dsubmx (lsubmx A)
 
-def fin_swap_add {x x': nat}  (F: fin (x + x')) : fin (x' + x) :=
-let d := F.1 in -- I seem to need this temporary assignment for the types to work out
-⟨d, begin rw nat.add_comm, apply F.2 end⟩ 
 
 def fin_swap {m m' n n' : nat} 
   (A: matrix (fin (m + m')) (fin (n + n')) α) :
    matrix (fin (m' + m)) (fin (n' + n)) α :=
 minormx A fin_swap_add fin_swap_add
-
-def fin_first {n m} (i : fin (n + m)) {h: i.val < n}: fin (n) :=
-⟨i.1, begin apply h end⟩
-
-def fin_second {n m} (i : fin (n + m)) {h: i.val > n}: fin (m) :=
-⟨i.1 - n, begin i  end⟩
-
-#check fin_first 
 
 def block_mx {m_down m_up n_left n_right: nat} :
   matrix (fin m_up) (fin n_left) α →
@@ -198,26 +207,25 @@ def block_mx {m_down m_up n_left n_right: nat} :
   matrix (fin (m_up + m_down)) (fin (n_left + n_right)) α
 | up_left up_right down_left down_right := 
 λ i j,
- if i.val < m_up
+ if h_i: i.val < m_up
  then 
-   let x := j.val < n_left in
-    if x
+    if h_j: j.val < n_left
     then
-      up_left (fin_first i) (fin_first j)
+      up_left (fin_first i (by assumption)) (fin_first j (by assumption))
     else
-      up_right (fin_first i) (fin_second j)
+      up_right (fin_first i (by assumption)) (fin_second j (by apply le_of_not_gt; assumption))
   else
-   if j.val < n_left
+   if h_j: j.val < n_left
     then
-      down_left (fin_second i)  (fin_first j)
+      down_left (fin_second i (by apply le_of_not_gt; assumption)) (fin_first j (by assumption))
     else
-      down_right (fin_second i) (fin_second j)
+      down_right (fin_second i (by apply le_of_not_gt; assumption)) (fin_second j (by apply le_of_not_gt; assumption))
  
 def Gaussian_elimination [decidable_eq α] [has_inv α]:
    Π (m n), matrix (fin m) (fin n) α → 
    (matrix (fin m) (fin m) α × matrix (fin n) (fin n) α × nat)
 | (x+1) (y+1) A :=
-  let optional_ij := pick_encodable (α) (λ el, le ≠ 0) (x+1) (y+1) A in
+  let optional_ij := pick_encodable (α) (λ el, el ≠ 0) (x+1) (y+1) A in
   match optional_ij with
   | some ij :=
     let i := ij.1 in
@@ -233,7 +241,7 @@ def Gaussian_elimination [decidable_eq α] [has_inv α]:
       xrow i 0 (fin_swap (block_mx 1 0 v L)),
       xcol j 0 (fin_swap (block_mx (λ i1 j1, a) u 0 U)),
       r + 1
-     )
+    )
   | none :=
      (
       (1 : (matrix (fin (x+1)) (fin (x+1)) α)),
@@ -261,16 +269,38 @@ if (x = 2 ∧ y = 1) then 1 else
 if (x = 2 ∧ y = 2) then 1 else
 0
 
-def getL : matrix (fin 3) (fin 3) rat :=
-  let res := Gaussian_elimination 3 3 test in
+def getL [decidable_eq α] [has_inv α] {m n : nat}  (M : matrix (fin n) (fin m) α) :=
+  let res := Gaussian_elimination n m M in
   res.1
 
-def getU : matrix (fin 3) (fin 3) rat :=
-  let res := Gaussian_elimination 3 3 test in
+def getU [decidable_eq α] [has_inv α] {m n : nat}  (M : matrix (fin n) (fin m) α) :=
+  let res := Gaussian_elimination n m M in
   res.2.1
 
-def getRank : nat :=
-let res := Gaussian_elimination 3 3 test in
-res.2.2
+def getRank [decidable_eq α] [has_inv α] (m n : nat)  (M : matrix (fin n) (fin m) α) :=
+  let res := Gaussian_elimination n m M in
+  res.2.2
 
-#eval (getL *ₘ getU) 2 1
+theorem L_times_U_is_input [decidable_eq α] [has_inv α] [has_one α] (m n : nat)
+   (M : matrix (fin m) (fin m) α) : (getL M) *ₘ (getU M) = M :=
+begin
+  rw getL,
+  rw getU,
+  simp,
+  induction m,
+  rw Gaussian_elimination,
+  simp,
+  rw (*ₘ),
+  rw 
+
+  
+
+  rw Gaussian_elimination,
+  simp,
+  
+
+
+
+
+
+end
